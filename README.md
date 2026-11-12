@@ -79,6 +79,9 @@ The demo has been exercised on the iOS Simulator. Browser, Android, macOS, and o
 
 ## Demo Video
 
+https://github.com/user-attachments/assets/267f57f6-55f8-452e-8660-77fb868d2e28
+
+
 ## References
 
 - [Expo Exact — Official GitHub Repository](https://github.com/expo/exact)
