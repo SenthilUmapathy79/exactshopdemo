@@ -1,54 +1,83 @@
-# Product catalog
+# Product Catalog — Expo Exact Demo
 
-This is the existing ExactShopDemoApp Exact native application. Its manifest, bundle ID,
-and framework checkout are unchanged. There are no React or external UI dependencies.
+A simple native iOS product catalog application built using **[Expo Exact](https://github.com/expo/exact)**, demonstrating declarative UI development with Contract, TypeScript-based API integration, native navigation, and local state management.
+
+The application uses [FakeStoreAPI](https://fakestoreapi.com/) to display a list of products, with category filtering and navigation to a Product Detail Page (PDP).
+
+### Features
+
+- **Product Listing Page (PLP):** Displays products with thumbnails, titles, categories, and prices.
+- **Category filtering:** Dynamically loads available categories, with *All Categories* selected by default.
+- **Product Detail Page (PDP):** Displays product information, including its image, description, price, and rating.
+- **Native navigation:** Navigate between the product listing and detail screens while retaining the selected category.
+- **Local data reuse:** Product details are obtained from the previously loaded product collection, without additional product-detail API requests.
+- **Loading and error handling:** Handles API loading, failures, empty results, and retry actions.
+
+## Built with Expo Exact
+
+This application is an experiment with **Expo Exact**, exploring its Contract-based UI architecture, native rendering, resource management, and navigation capabilities.
+
+Unlike React Native applications, Expo Exact uses a compiled Contract UI definition and a Rust-based native runtime rather than React components.
+
+**Prerequisites and setup**
+
+This repository contains only the demo application. It depends on a separate checkout of the Expo Exact framework for compilation and execution.
+
+Please refer to the official [Expo Exact GitHub repository](https://github.com/expo/exact) for instructions on installing Rust, Bun, Xcode, and other required dependencies, as well as setting up the framework.
+
+The demo project must be placed alongside the `exact` framework directory:
+
+```text
+Projects/
+├── exact/                  # Expo Exact framework
+└── exactshopdemo/          # This demo application
+    ├── app.contract
+    ├── app.ts
+    ├── app.test.contract
+    └── ...
+```
+
+The project was developed and tested on the **iOS Simulator only**. Other platforms have not been evaluated as part of this experiment.
 
 ## Data and navigation
 
-`app.contract` declares root resources `categories` and `products`. Exact invokes the
-matching `loadCategories` / `loadProducts` entries through `app.ts`'s generated `Answer`
-interface. The module grants `net.fetch https://fakestoreapi.com`, validates both responses,
-and projects products into the precise Contract shape (including optional rating text).
-Thrown HTTP, network, or validation errors drive Exact's resource failure states and Retry.
+`app.contract` declares root resources `categories` and `products`. Exact invokes the matching `loadCategories` and `loadProducts` entries through the generated `Answer` interface implemented in `app.ts`.
 
-The local empty-string category value labels the first option **All Categories**; other
-values come unchanged from the API. `shown` filters the loaded collection without I/O.
-Rows push `/product/:id`; detail content resolves that ID against the same root resource.
-There is no detail source or `/products/{id}` request. `stack(nav)` retains the listing
-screen, its category state and its scroll container while a detail is open. Missing IDs
-show a fallback and Back action. Images load independently from their API-provided URLs.
+The TypeScript module grants network access to `https://fakestoreapi.com`, validates both API responses, and maps products into the Contract data shape, including optional rating information.
 
-## Commands
+HTTP, network, and validation errors are handled through Exact's resource failure states, with support for retry actions.
 
-```sh
-bun exact.mjs contract build app.contract --json --errors-only
-bun exact.mjs web                 # browser preview
-bun exact.mjs ios --run           # build/install/launch on iOS Simulator
-bun exact.mjs verify              # web tests and layout checks
-bun exact.mjs verify ios          # native tests and layout checks
-bun exact.mjs share               # generate an iPhone installation link
-```
+**Product navigation**
 
-`app.test.contract` checks live API data, filtering, USD formatting, detail content,
-back navigation, retained category, missing IDs, and failure/retry. These integration
-checks use FakeStoreAPI's sample data, so service outages or sample changes can fail them.
-The offline navigation test disables API access after the initial reads.
+Selecting a product navigates to `/product/:id`.
 
-Additional controlled browser checks exercise pending resources and an empty response:
+The detail screen resolves the selected product ID against the existing root `products` resource.
+
+- `stack(nav)` retains the listing screen, selected category, and scroll container during detail navigation.
+- Missing product IDs display a fallback message and Back action.
+- Product images load independently using the image URLs provided by FakeStoreAPI.
+
+## Build and run — iOS
+
+After completing the Expo Exact framework setup, navigate to the demo application directory.
+
+**Generate the iOS native project:**
 
 ```sh
-bun exact.mjs web --port 54321
-# In another terminal (uses this checkout's playwright-core and installed Chrome):
-node tools/catalog-browser-check.mjs
+bun exact.mjs ios --prebuild
 ```
 
-API instrumentation logs `catalog GET /products/categories` and `catalog GET /products`.
-To inspect request counts across a complete journey:
+**Build and launch on the iOS Simulator:**
 
 ```sh
-bun exact.mjs agent web 'clock data' 'type category electronics' 'tap product-9' \
-  'clock settle' 'clock data' 'tap back' 'clock settle' logs
+bun exact.mjs ios --run
 ```
 
-The trace should contain only the two initial catalog calls. Browser and console copies
-of a log line describe the same call; product-image downloads are separate from API reads.
+These are the commands used during this experiment.
+
+The demo has been exercised on the iOS Simulator. Browser, Android, macOS, and other platform workflows have not been tested.
+
+## References
+
+- [Expo Exact — Official GitHub Repository](https://github.com/expo/exact)
+- [FakeStoreAPI](https://fakestoreapi.com/)
