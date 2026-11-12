@@ -77,6 +77,8 @@ These are the commands used during this experiment.
 
 The demo has been exercised on the iOS Simulator. Browser, Android, macOS, and other platform workflows have not been tested.
 
+## Demo Video
+
 ## References
 
 - [Expo Exact — Official GitHub Repository](https://github.com/expo/exact)
