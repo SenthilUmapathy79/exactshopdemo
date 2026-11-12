@@ -1,0 +1,91 @@
+shape Product
+  id: number
+  title: string
+  price: number
+  description: string
+  category: string
+  image: string
+  ratingText: string
+
+routes nav
+  products "/"
+    product "/product/:id"
+
+component ExactShopDemoApp
+  state category = ""
+  resource categories = loadCategories() as shape string[] else empty()
+  resource products = loadProducts() as shape Product[] else empty()
+  derive shown = products.filter(p => category == "" or p.category == category)
+
+  action choose(value: string)
+    category = value
+  action retryCategories
+    refresh categories
+  action retryProducts
+    refresh products
+  action open(id: number)
+    nav = push(nav, path("product", `${id}`))
+  action back
+    nav = back(nav)
+  action follow(url: string)
+    nav = go(nav, url)
+
+  view
+    main testId="root" navigationKey=`${top(nav).id}` navigationBack="back" navigate=follow width="100%" height="100%"
+      for e in stack(nav) key=e.id
+        if e.name == "products"
+          column navigationKey=`${e.id}` navigationScroll="products-list" position="absolute" inset=0 display="flex" flex-direction="column"
+            header padding="8px 16px"
+              text "Products" role="heading" aria-level=2
+            column padding=16 gap=8 flex-shrink=0
+              select min-height="1.5rem" value=category change=choose aria-label="Category" testId="category"
+                option "All Categories" value=""
+                for c in categories key=c
+                  option c value=c
+            if pending(categories)
+              text "Loading categories…" role="status" testId="categories-loading"
+            if failed(categories)
+              text "Could not load categories. Please try again." testId="categories-error"
+              button press=retryCategories testId="retry-categories"
+                text "Retry Categories"
+            if pending(products)
+              text "Loading products…" role="status" testId="products-loading"
+            if failed(products)
+              text "Could not load products. Please try again." testId="products-error"
+              button press=retryProducts testId="retry-products"
+                text "Retry Products"
+            if current(products) and shown.length == 0
+              text "No products found" testId="empty"
+            // Keep the scrolling viewport below the fixed filter on every host.
+            column flex=1 min-height=0 overflow="hidden" testId="products-viewport"
+              list id="products-list" testId="products-list" appearance="none" virtualized=true estimated-item-height=140 flex=1 min-height=0
+                for p in shown key=p.id
+                  button press=open(p.id) display="flex" flex-direction="row" align-items="center" text-align="left" testId=`product-${p.id}`
+                    row flex=1 min-width=0 gap=12 padding=12 align-items="center" flex-wrap="wrap"
+                      image p.image width=80 height=80 object-fit="contain" aria-label=p.title testId=`thumbnail-${p.id}`
+                      column flex=1 min-width=0 flex-basis="12rem" gap=4
+                        text p.title testId=`title-${p.id}`
+                        text p.category font="-exact-footnote" color="-exact-secondary-label"
+                        text formatNumber(p.price, "currency", "USD") font="-exact-headline" testId=`price-${p.id}`
+                      image "symbol:forward-chevron"
+        if e.name == "product"
+          column navigationKey=`${e.id}` navigationScroll="product-detail" position="absolute" inset=0 display="flex" flex-direction="column"
+            header padding="8px 16px"
+              button id="back" press=back testId="back"
+                text "Products"
+              text "Product Details" role="heading" aria-level=2
+            scroll id="product-detail" flex=1 min-height=0 padding=16
+              if products.filter(p => `${p.id}` == e.params.id).length == 0
+                column gap=16
+                  text "This product is not available in the loaded catalog." testId="missing-product"
+                  button press=back testId="missing-back"
+                    text "Back to Products"
+              for p in products.filter(p => `${p.id}` == e.params.id) key=p.id
+                column gap=16
+                  image p.image width="100%" height=280 object-fit="contain" aria-label=p.title testId="detail-image"
+                  text p.title font="-exact-title2" testId="detail-title"
+                  text p.category color="-exact-secondary-label" testId="detail-category"
+                  text formatNumber(p.price, "currency", "USD") font="-exact-title2" testId="detail-price"
+                  text p.description testId="detail-description"
+                  if p.ratingText != ""
+                    text p.ratingText testId="detail-rating"

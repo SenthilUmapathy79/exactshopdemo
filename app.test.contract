@@ -1,0 +1,52 @@
+test "API categories, products, thumbnails and USD prices load"
+  expect state category == ""
+  expect state categories.0 == "electronics"
+  expect state shown.length == 20
+  expect tree has "thumbnail-1"
+  expect text "price-1" == "$109.95"
+
+test "filter and detail reuse loaded products while network is unavailable"
+  expect state shown.length == 20
+  fail fetch "https://fakestoreapi.com"
+  type "category" "electronics"
+  expect state category == "electronics"
+  expect state shown.length == 6
+  expect tree missing "product-1"
+  tap "product-9"
+  clock settle
+  clock data
+  expect text "detail-title" == "WD 2TB Elements Portable External Hard Drive - USB 3.0 "
+  expect text "detail-category" == "electronics"
+  expect text "detail-price" == "$64.00"
+  expect tree has "detail-description"
+  expect tree has "detail-rating"
+  expect tree has "detail-image"
+  tap "back"
+  clock settle
+  expect state category == "electronics"
+  expect state shown.length == 6
+  expect tree missing "products-error"
+  type "category" ""
+  expect state shown.length == 20
+  pass fetch "https://fakestoreapi.com"
+
+test "missing product offers a way back"
+  at "/product/999999"
+  expect tree has "missing-product"
+  tap "missing-back"
+  clock settle
+  expect tree has "category"
+
+test "failed initial requests can retry"
+  before data
+  fail fetch "https://fakestoreapi.com"
+  clock data
+  expect tree has "categories-error"
+  expect tree has "products-error"
+  pass fetch "https://fakestoreapi.com"
+  tap "retry-categories"
+  tap "retry-products"
+  clock data
+  expect tree missing "categories-error"
+  expect tree missing "products-error"
+  expect state shown.length == 20

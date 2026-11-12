@@ -1,0 +1,28 @@
+{
+  "$schema": "../exact/scripts/app.schema.json",
+  "name": "ExactShopDemoApp",
+  "short_name": "ExactShopDemoApp",
+  "id": "com.example.exactshopdemoapp",
+  "start_url": "/",
+  "display": "standalone",
+  "app": {
+    "id": "com.example.exactshopdemoapp",
+    "name": "ExactShopDemoApp"
+  },
+  "host": {
+    "web": {},
+    "ios": {
+      "minimumOS": "17.0",
+      "deviceFamily": [
+        "iphone",
+        "ipad"
+      ]
+    }
+  },
+  "deploy": {
+    "store": {
+      "web": "0",
+      "ios": "0"
+    }
+  }
+}
